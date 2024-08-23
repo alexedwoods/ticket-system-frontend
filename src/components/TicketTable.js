@@ -3,18 +3,25 @@
 import React, { useState, useEffect } from 'react';
 import axios from '@/lib/axios';
 
-export default function TicketTable({ status }) {
+export default function TicketTable() {
     const [tickets, setTickets] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     const [isError, setIsError] = useState(false);
     const [currentPage, setCurrentPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
+    const [filter, setFilter] = useState('all'); // Default to all tickets options are 'all', 'closed', and 'open'
 
     useEffect(() => {
         const fetchTickets = async () => {
             setIsLoading(true);
             try {
-                const response = await axios.get(`/api/tickets/${status}?page=${currentPage}`);
+                let url;
+                if (filter === 'all') {
+                    url = `/api/tickets?page=${currentPage}`;
+                } else {
+                    url = `/api/tickets/${filter}?page=${currentPage}`;
+                }
+                const response = await axios.get(url);
                 setTickets(response.data.data);
                 setTotalPages(response.data.meta.last_page);
                 setIsLoading(false);
@@ -25,13 +32,31 @@ export default function TicketTable({ status }) {
         };
 
         fetchTickets();
-    }, [status, currentPage]);
+    }, [currentPage, filter]);
+
+    const handleFilterChange = (newFilter) => {
+        setFilter(newFilter);
+        setCurrentPage(1);
+    };
 
     if (isLoading) return <div>Loading...</div>;
     if (isError) return <div>Error loading tickets</div>;
 
     return (
         <div>
+            <div className="mb-4">
+                <label htmlFor="status-filter" className="mr-2">Filter tickets:</label>
+                <select
+                    id="status-filter"
+                    value={filter}
+                    onChange={(e) => handleFilterChange(e.target.value)}
+                    className="border rounded px-2 py-1"
+                >
+                    <option value="all">All Tickets</option>
+                    <option value="open">Open Tickets</option>
+                    <option value="closed">Closed Tickets</option>
+                </select>
+            </div>
             <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
                 <tr>
