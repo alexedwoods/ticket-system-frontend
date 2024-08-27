@@ -7,6 +7,7 @@ export default function UserTicketsTable({ userEmail }) {
     const [tickets, setTickets] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     const [isError, setIsError] = useState(false);
+    const [isUnauthorised, setIsUnauthorised] = useState(false);
     const [currentPage, setCurrentPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
 
@@ -19,7 +20,11 @@ export default function UserTicketsTable({ userEmail }) {
                 setTotalPages(response.data.meta.last_page);
                 setIsLoading(false);
             } catch (error) {
-                setIsError(true);
+                if (error.response.status === 401) {
+                    setIsUnauthorised(true);
+                } else {
+                    setIsError(true);
+                }
                 setIsLoading(false);
             }
         };
@@ -28,6 +33,7 @@ export default function UserTicketsTable({ userEmail }) {
     }, [userEmail, currentPage]);
 
     if (isLoading) return <div>Loading...</div>;
+    if (isUnauthorised) return <div>You are not authorised to view these tickets</div>;
     if (isError) return <div>Error loading tickets</div>;
 
     return (
